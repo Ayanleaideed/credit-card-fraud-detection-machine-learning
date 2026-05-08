@@ -1,0 +1,60 @@
+# macOS junk
+.DS_Store
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build files
+build/
+dist/
+wheels/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# uv cache folders
+.uv/
+uv-cache/
+.uv-cache/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Ignore all notebooks by default
+*.ipynb
+.ipynb_checkpoints/
+
+# But allow this notebook to be pushed
+!main.ipynb
+!src/main.ipynb
+
+# Ignore local testing files/folder
+src/testing/
+
+# Local datasets
+dataset/
+
+# Tool caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editors
+.vscode/
+.idea/
+
+# Logs/temp
+*.log
+*.tmp
+*.bak
+*.swp
