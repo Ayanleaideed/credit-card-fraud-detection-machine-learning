@@ -2,15 +2,24 @@
 
 A machine learning project for detecting fraudulent credit card transactions using supervised classification models, feature engineering, model comparison, hyperparameter tuning, and decision-threshold optimization.
 
-The goal of this project was not just to build a model with high accuracy, but to build a model that can identify fraud cases while keeping false fraud alerts reasonable. Since fraud is rare, the dataset is highly imbalanced, which makes this a more realistic classification problem than a simple accuracy-based model.
+The goal of this project was to build a model that can detect fraud while keeping false fraud alerts reasonable. Since fraud cases are rare compared to normal transactions, this is an imbalanced classification problem. Because of that, the project focuses on precision, recall, F1-score, ROC-AUC, and confusion matrices instead of accuracy alone.
+
+---
 
 ## Project Summary
 
-Credit card fraud detection is a difficult machine learning problem because most transactions are legitimate, while fraud cases make up only a very small portion of the data. This means a model can achieve high accuracy by mostly predicting “not fraud,” even if it performs poorly at actually detecting fraud.
+Credit card fraud detection is difficult because most transactions are legitimate, while fraud cases make up a very small percentage of the data. A model can get high accuracy by mostly predicting “not fraud,” but that does not mean it is useful for detecting fraud.
 
-Because of that, this project focuses on fraud-class performance using precision, recall, F1-score, ROC-AUC, and confusion matrices.
+This project compares several machine learning models:
 
-Several models were trained and compared, including Logistic Regression, Decision Tree, Random Forest, Gradient Boosting, AdaBoost, and XGBoost. After model comparison and threshold tuning, the best final model was:
+- Logistic Regression
+- Decision Tree
+- Random Forest
+- Gradient Boosting
+- AdaBoost
+- XGBoost
+
+After comparing models and tuning thresholds, the final selected model was:
 
 **XGBoost with a decision threshold of 0.98**
 
@@ -25,29 +34,15 @@ Final model performance:
 | ROC-AUC | 0.9957 |
 | Threshold | 0.98 |
 
-The final model correctly detected **1,495 fraud transactions** while only falsely flagging **214 normal transactions** as fraud.
-
----
-
-## Problem Statement
-
-The objective of this project was to train a machine learning model that can classify credit card transactions as either fraudulent or legitimate.
-
-In real fraud detection systems, the cost of different errors is not the same:
-
-- Missing a fraud transaction is risky because fraudulent activity may continue.
-- Incorrectly flagging a normal transaction can frustrate customers and create unnecessary review work.
-- A useful model needs a balance between catching fraud and avoiding too many false alarms.
-
-For that reason, this project does not rely on accuracy alone. Instead, the final model was selected based on the balance between precision, recall, F1-score, ROC-AUC, and confusion matrix results.
+The final model correctly detected **1,495 fraud transactions** and falsely flagged only **214 normal transactions** as fraud.
 
 ---
 
 ## Dataset
 
-The project uses a simulated credit card transaction dataset from Kaggle. The data was generated to mirror real-world transaction behavior and includes transaction details, customer information, merchant information, location data, and a fraud label.
+The project uses a simulated credit card transaction dataset from Kaggle. The dataset includes transaction details, merchant information, customer information, location data, and a fraud label.
 
-The dataset already provides separate training and testing files, so I kept the original split:
+The original train/test split was kept:
 
 - `fraudTrain.csv` was used for training
 - `fraudTest.csv` was used for final testing
@@ -66,19 +61,15 @@ Target column:
 | `0` | Not Fraud |
 | `1` | Fraud |
 
-The fraud class is very small compared to the non-fraud class, which makes this an imbalanced classification problem.
-
 ---
 
 ## Class Imbalance
 
-One of the biggest challenges in this project was the class imbalance. Fraud cases made up less than 1% of the dataset.
+The dataset is highly imbalanced. Most transactions are normal, while fraud cases make up less than 1% of the data.
 
 ![Class Distribution](src/reports/figures/class_distribution.png)
 
-This matters because a model can have very high accuracy while still missing many fraud cases. For example, if almost every transaction is not fraud, a model that predicts “not fraud” most of the time can appear accurate but still fail at the actual task.
-
-Because of this, the project focuses more on:
+This is why accuracy alone was not enough. A model could predict almost everything as “not fraud” and still look accurate. For this project, the main evaluation metrics were:
 
 - Precision
 - Recall
@@ -90,7 +81,7 @@ Because of this, the project focuses more on:
 
 ## Exploratory Data Analysis
 
-Before training models, I explored the dataset to understand fraud patterns and decide which features could be useful.
+Before training the models, I explored the dataset to understand patterns connected to fraud.
 
 ### Transaction Amount
 
@@ -98,31 +89,31 @@ Fraud transactions tended to have higher transaction amounts. Since the raw tran
 
 ![Log Transaction Amount by Fraud Class](src/reports/figures/log_amount_by_fraud_class.png)
 
-This showed that transaction amount was likely to be useful for fraud prediction.
+This showed that transaction amount was useful for fraud prediction.
 
 ### Fraud Rate by Category
 
-Fraud rates were not evenly distributed across transaction categories. Some categories had noticeably higher fraud rates than others.
+Fraud rates were different across transaction categories.
 
 ![Fraud Rate by Category](src/reports/figures/fraud_rate_by_category.png)
 
-Categories such as online shopping and miscellaneous online transactions showed higher fraud rates. This supported keeping transaction category as an important categorical feature.
+Some categories had higher fraud rates than others, which made transaction category an important feature for the models.
 
 ### Fraud Rate by Transaction Hour
 
-Fraud risk also changed depending on the hour of the transaction.
+Fraud risk also changed depending on the transaction hour.
 
-![Fraud Rate by Hour](src/reports/figures/fraud_rate_by_hour.png)
+![Fraud Rate by Hour](src/reports/figures/fraud_rate_by_hourV2.png)
 
-Late-night transaction hours showed higher fraud rates compared to most daytime hours. This supported creating a `transaction_hour` feature during preprocessing.
+Late-night hours showed higher fraud rates compared to most daytime hours. This supported creating and using `transaction_hour` as a feature.
 
 ---
 
 ## Data Preprocessing
 
-The raw dataset contained numeric columns, categorical string columns, date columns, and personal identifier columns. Since machine learning models require numeric input, preprocessing was needed before model training.
+The raw dataset included numeric columns, categorical string columns, date columns, and personal identifier columns. These had to be cleaned before training the models.
 
-The main preprocessing steps were:
+Main preprocessing steps:
 
 1. Kept the original train/test split
 2. Converted date columns into datetime format
@@ -135,9 +126,9 @@ The main preprocessing steps were:
 
 ### Feature Engineering
 
-The original datetime columns were converted into useful model features:
+The following features were created:
 
-| New Feature | Description |
+| Feature | Description |
 |---|---|
 | `transaction_hour` | Hour of the transaction |
 | `transaction_day` | Day of the month |
@@ -162,28 +153,17 @@ Some columns were removed because they were identifiers, personal information, o
 | `unix_time` | Redundant time representation |
 | `trans_date_trans_time` | Replaced with engineered time features |
 
-Categorical features such as merchant, category, gender, city, state, and job were encoded using one-hot encoding. Numeric features were scaled using `StandardScaler`.
+Categorical features such as merchant, category, gender, city, state, and job were one-hot encoded. Numeric features were scaled using `StandardScaler`.
 
 ---
 
 ## Models Tested
 
-I trained and compared multiple classification models:
+The models were trained using the same preprocessing pipeline so the comparison was consistent.
 
-- Logistic Regression
-- Decision Tree
-- Random Forest
-- Gradient Boosting
-- AdaBoost
-- XGBoost
+### Logistic Regression
 
-The purpose of testing multiple models was to compare simple linear models, tree-based models, ensemble methods, and boosting methods.
-
-### Logistic Regression Baseline
-
-Logistic Regression was used as the first baseline model because it is simple, interpretable, and commonly used for binary classification.
-
-However, it performed poorly on the fraud class:
+Logistic Regression was used as the first baseline model. It was simple and easy to interpret, but it struggled with the fraud class.
 
 | Metric | Score |
 |---|---:|
@@ -194,17 +174,55 @@ However, it performed poorly on the fraud class:
 
 This showed that a simple linear model was not strong enough for this dataset.
 
-### Tree-Based and Boosting Models
+### Decision Tree
 
-Tree-based models performed much better because they can capture nonlinear relationships between transaction features.
+Decision Tree performed better than Logistic Regression and had strong recall, but it had weaker precision than the stronger ensemble models.
 
-Decision Tree had strong recall but weaker precision. Random Forest improved performance by combining many trees. Gradient Boosting was one of the strongest untuned models. AdaBoost improved over Logistic Regression but was weaker than the strongest models.
+| Metric | Score |
+|---|---:|
+| Precision | 0.6505 |
+| Recall | 0.7305 |
+| F1-score | 0.6882 |
+| ROC-AUC | 0.8645 |
+
+### Random Forest
+
+Random Forest improved performance by combining many decision trees. The baseline Random Forest had very high precision but lower recall.
+
+| Metric | Score |
+|---|---:|
+| Precision | 0.9659 |
+| Recall | 0.5683 |
+| F1-score | 0.7156 |
+| ROC-AUC | 0.9700 |
+
+### Gradient Boosting
+
+Gradient Boosting was one of the strongest untuned baseline models.
+
+| Metric | Score |
+|---|---:|
+| Precision | 0.7807 |
+| Recall | 0.6970 |
+| F1-score | 0.7365 |
+| ROC-AUC | 0.9716 |
+
+### AdaBoost
+
+AdaBoost performed better than Logistic Regression but was weaker than the strongest models.
+
+| Metric | Score |
+|---|---:|
+| Precision | 0.6950 |
+| Recall | 0.2709 |
+| F1-score | 0.3898 |
+| ROC-AUC | 0.9765 |
 
 ---
 
 ## Model Comparison
 
-The models were compared mainly by fraud-class F1-score because F1-score balances precision and recall.
+The models were compared mainly using fraud-class F1-score because F1-score balances precision and recall.
 
 ![Model Comparison by F1 Score](src/reports/figures/model_comparison_f1_score.png)
 
@@ -227,7 +245,7 @@ Full model comparison:
 
 Random Forest was one of the strongest models, so I tuned it using `RandomizedSearchCV`.
 
-RandomizedSearchCV was used instead of GridSearchCV because the dataset is large, and an exhaustive grid search would be computationally expensive.
+I used `RandomizedSearchCV` instead of `GridSearchCV` because the dataset is large, and testing every possible parameter combination would take much longer.
 
 The tuned Random Forest achieved:
 
@@ -241,7 +259,7 @@ The tuned Random Forest achieved:
 
 ![Tuned Random Forest Confusion Matrix](src/reports/figures/confusion_matrix_tuned_random_forest.png)
 
-Tuned Random Forest confusion matrix summary:
+Tuned Random Forest summary:
 
 | Result | Count |
 |---|---:|
@@ -255,7 +273,7 @@ Random Forest performed well, but XGBoost later gave a better F1-score and fewer
 
 ## XGBoost Default Threshold
 
-XGBoost was tested as an advanced boosting model. At the default threshold of `0.50`, it caught most fraud cases, but it also flagged too many normal transactions as fraud.
+XGBoost was tested as an advanced boosting model. At the default threshold of `0.50`, it caught most fraud cases, but it also created too many false positives.
 
 ![XGBoost Default Threshold Confusion Matrix](src/reports/figures/confusion_matrix_xgboost_default.png)
 
@@ -268,7 +286,7 @@ Default XGBoost results:
 | F1-score | 0.3839 |
 | ROC-AUC | 0.9957 |
 
-At the default threshold, XGBoost detected 2,000 out of 2,145 fraud cases, but it also created 6,274 false positives. This showed that the model was too aggressive and needed threshold tuning.
+At the default threshold, XGBoost detected **2,000 out of 2,145 fraud cases**, but it also created **6,274 false positives**. This showed that the model was too aggressive and needed threshold tuning.
 
 ---
 
@@ -337,9 +355,9 @@ Both models performed well, but XGBoost had the stronger overall ranking ability
 
 ## Feature Importance
 
-Feature importance was used to understand what the final XGBoost model relied on most.
+Feature importance was used to understand which features contributed most to the final XGBoost model.
 
-![XGBoost Feature Importance](src/reports/figures/xgboost_feature_importance.png)
+![XGBoost Feature Importance](src/reports/figures/Feature_importance.png)
 
 The most important feature groups were:
 
@@ -348,7 +366,7 @@ The most important feature groups were:
 - Merchant information
 - Transaction hour
 
-This matched the earlier exploratory analysis. Fraud rates changed by category, fraud transactions tended to have different transaction amounts, and transaction hour showed useful time-based patterns.
+This matched the exploratory analysis. Fraud rates changed by category, fraud transactions showed transaction amount patterns, and transaction hour showed useful time-based patterns.
 
 ---
 
@@ -394,23 +412,105 @@ credit-card-fraud-detection-machine-learning/
 │   │
 │   └── reports/
 │       ├── figures/
+│       │   ├── Feature_importance.png
 │       │   ├── class_distribution.png
-│       │   ├── log_amount_by_fraud_class.png
-│       │   ├── fraud_rate_by_category.png
-│       │   ├── fraud_rate_by_hour.png
-│       │   ├── model_comparison_f1_score.png
+│       │   ├── confusion_matrix_final_xgboost.png
 │       │   ├── confusion_matrix_tuned_random_forest.png
 │       │   ├── confusion_matrix_xgboost_default.png
-│       │   ├── confusion_matrix_final_xgboost.png
-│       │   ├── xgboost_threshold_tuning.png
+│       │   ├── fraud_rate_by_category.png
+│       │   ├── fraud_rate_by_hour.png
+│       │   ├── fraud_rate_by_hourV2.png
+│       │   ├── log_amount_by_fraud_class.png
+│       │   ├── model_comparison_f1_score.png
 │       │   ├── roc_curve_comparison.png
-│       │   └── xgboost_feature_importance.png
+│       │   ├── xgboost_feature_importance.png
+│       │   └── xgboost_threshold_tuning.png
 │       │
 │       └── tables/
 │           ├── final_model_results.csv
 │           ├── random_forest_threshold_results.csv
-│           ├── xgboost_threshold_results.csv
-│           └── xgboost_feature_importance.csv
+│           ├── xgboost_feature_importance.csv
+│           └── xgboost_threshold_results.csv
 │
 ├── README.md
 └── requirements.txt
+```
+
+---
+
+## Technologies Used
+
+- Python
+- pandas
+- NumPy
+- scikit-learn
+- XGBoost
+- matplotlib
+- seaborn
+- Jupyter Notebook
+
+---
+
+## How to Run the Project
+
+1. Clone the repository:
+
+```bash
+git clone <your-repo-url>
+cd credit-card-fraud-detection-machine-learning
+```
+
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+or, if using `uv`:
+
+```bash
+uv sync
+```
+
+3. Place the dataset files in:
+
+```text
+data/archive/
+```
+
+Expected files:
+
+```text
+fraudTrain.csv
+fraudTest.csv
+```
+
+4. Open and run the notebook:
+
+```text
+src/main.ipynb
+```
+
+The notebook generates plots and report tables under:
+
+```text
+src/reports/
+```
+
+---
+
+## References
+
+Datasets:
+
+- Kaggle Fraud Detection Dataset
+- Kaggle Credit Card Fraud Detection Dataset 2023
+
+Libraries:
+
+- pandas
+- NumPy
+- scikit-learn
+- XGBoost
+- matplotlib
+- seaborn
